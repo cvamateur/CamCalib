@@ -60,12 +60,12 @@ def calibrate(objPts: List[NDArray],
             A[2 * j, 0:3] = Pi
             A[2 * j, 3:6] = np.zeros([3], dtype=_dtype)
             A[2 * j, 6:8] = -imgPt[0] * Pi[0:2]
-            b[2 * j] = -imgPt[0]
+            b[2 * j] = imgPt[0]
 
             A[2 * j + 1, 0:3] = np.zeros([3], dtype=_dtype)
             A[2 * j + 1, 3:6] = Pi
             A[2 * j + 1, 6:8] = -imgPt[1] * Pi[0:2]
-            b[2 * j + 1] = -imgPt[1]
+            b[2 * j + 1] = imgPt[1]
 
         # solve Ax=b
         if len(objPts_i) == 4:
@@ -77,21 +77,11 @@ def calibrate(objPts: List[NDArray],
             s_inv_diag = np.zeros([8, 2 * len(objPts_i)], dtype=_dtype)
             s_inv_diag[range(8), range(8)] = s_inv
             Hi = vt.T @ s_inv_diag @ u.T @ b
+            # Hi = np.linalg.lstsq(A, b, rcond=None)[0]
 
         Hi = Hi.reshape(-1)
         Hi = np.append(Hi, 1).reshape(3, 3)
-
-        # determine the sign
-        # TODO: better way?
-        sign = 1.0
-        for k in range(len(objPts_i)):
-            P_k = objPts_i[k].reshape(-1, 1)
-            pred_px = Hi[k, :] @ np.array([P_k[0], P_k[1], 1], dtype=_dtype)
-            if pred_px != 0.0:
-                sign = -1.0 if pred_px < 0 else -1.0
-                break
-
-        H[i] = sign * Hi
+        H[i] = Hi
 
         # We need decompose H to K, R, T. We can write:
         #   H = [h1, h2, h3] = K * [r1, r2, t], where
@@ -144,28 +134,35 @@ def calibrate(objPts: List[NDArray],
     ]).reshape(3, 3)
 
     # Decompose B to K
-    L = np.linalg.cholesky(B)
+    try:
+        L = np.linalg.cholesky(B)
+    except np.linalg.LinAlgError:
+        L = np.linalg.cholesky(-B)
     camMat = np.linalg.inv(L.T)
     camMat /= camMat[2, 2]
 
     #############
     # Extrinsic #
     #############
+    #   ρ * H = K * [r1 r2 t]
+    #   ρ * K_inv * H = [r1 r2 t]
+    #   ρ = 1 / |K_inv * H|
+    #   r1 = ρ * K_inv * h1
+    #   r2 = ρ * K_inv * h2
+    #   r3 = r1 x r2
+    #   r = ρ * K_inv * h3
     rvecs, tvecs = [], []
-
     K_inv = np.linalg.inv(camMat)
     for i, Hi in enumerate(H):
-        h1 = Hi[:, 0].reshape(3, 1)
-        h2 = Hi[:, 1].reshape(3, 1)
-        h3 = Hi[:, 2].reshape(3, 1)
+        h1 = Hi[:, 0:1]
+        h2 = Hi[:, 1:2]
+        h3 = Hi[:, 2:3]
 
-        r1 = K_inv @ h1
-        rho = 1.0 / np.linalg.norm(r1)
-        r1 *= rho
+        rho = 1.0 / np.linalg.norm(K_inv @ h1)
+        r1 = rho * K_inv @ h1
         r2 = rho * K_inv @ h2
         r3 = np.cross(r1.T, r2.T).T
         R = np.concatenate([r1, r2, r3], axis=1)
-
         rvec, _ = cv.Rodrigues(R)
         tvec = rho * K_inv @ h3
 
