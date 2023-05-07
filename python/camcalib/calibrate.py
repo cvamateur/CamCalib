@@ -83,42 +83,42 @@ def calibrate(objPts: List[NDArray],
         Hi = np.append(Hi, 1).reshape(3, 3)
         H[i] = Hi
 
-        # We need decompose H to K, R, T. We can write:
-        #   H = [h1, h2, h3] = K * [r1, r2, t], where
-        #       hi: the i-th column of H, hi=[H_1i, H_2i, H_3i]^T
-        #       r1: the first column of R
-        #       r2: the second column of H
-        #       t: translation vector
-        # Expand the formula above, and multiply K_inv of the left:
-        #   K_inv * h1 = r1
-        #   K_inv * h2 = r2
-        #   K_inv * h3 = t
-        # Since r1, r2 stem from a rotation matrix, we exploit properties:
-        #   r1^T * r2 = 0
-        #   |r1| = |r2| = 1 -> r1^T * r1 - r2^T * r2 = 0
-        # Substitute in to the properties we get:
-        #   h1^T * K_inv^T * K_inv * h2 = 0
-        #   h1^T * K_inv^T * K_inv * h1 - h2^T * K_inv^T * K_inv * h2 = 0
-        # To simplify the equations, we define a symmetric and positive
-        # definite matrix B = K_inv^T * K_inv, such that:
-        #   h1^T * B * h2 = 0
-        #   h1^T * B * h1 - h2^T * B * h2 = 0
-        # If B is solved, then K is obtained by Cholesky decomposition:
-        #   Chol(B) = L * L^T, where L = K_inv^T
-        # Write the equations relative to B into a linear system as:
-        #  V_12^T * b = 0
-        #  V_11^T * b - V_22^T * b = 0, where
-        #       b = [b11, b12, b13, b12, b22, b23, b13, b23, b33]^T
-        #       V_ij = [ H_1i*H_1j,
-        #                H_2i*H_1j + H_1i * H_2j,
-        #                H_3i*H_1j + H_1i * H_3j,
-        #                H_2i * H_2j,
-        #                H_3i * H_2j + H_2i * H_3j,
-        #                H_3i * H_3j]^T
-        # Since B has 5/6 DOF, we need at least 3 different views.
-        for i, Hi in enumerate(H):
-            V[2 * i, :] = _v(Hi, 0, 1)
-            V[2 * i + 1, :] = _v(Hi, 0, 0) - _v(Hi, 1, 1)
+    # We need decompose H to K, R, T. We can write:
+    #   H = [h1, h2, h3] = K * [r1, r2, t], where
+    #       hi: the i-th column of H, hi=[H_1i, H_2i, H_3i]^T
+    #       r1: the first column of R
+    #       r2: the second column of H
+    #       t: translation vector
+    # Expand the formula above, and multiply K_inv of the left:
+    #   K_inv * h1 = r1
+    #   K_inv * h2 = r2
+    #   K_inv * h3 = t
+    # Since r1, r2 stem from a rotation matrix, we exploit properties:
+    #   r1^T * r2 = 0
+    #   |r1| = |r2| = 1 -> r1^T * r1 - r2^T * r2 = 0
+    # Substitute in to the properties we get:
+    #   h1^T * K_inv^T * K_inv * h2 = 0
+    #   h1^T * K_inv^T * K_inv * h1 - h2^T * K_inv^T * K_inv * h2 = 0
+    # To simplify the equations, we define a symmetric and positive
+    # definite matrix B = K_inv^T * K_inv, such that:
+    #   h1^T * B * h2 = 0
+    #   h1^T * B * h1 - h2^T * B * h2 = 0
+    # If B is solved, then K is obtained by Cholesky decomposition:
+    #   Chol(B) = L * L^T, where L = K_inv^T
+    # Write the equations relative to B into a linear system as:
+    #  V_12^T * b = 0
+    #  V_11^T * b - V_22^T * b = 0, where
+    #       b = [b11, b12, b13, b12, b22, b23, b13, b23, b33]^T
+    #       V_ij = [ H_1i*H_1j,
+    #                H_2i*H_1j + H_1i * H_2j,
+    #                H_3i*H_1j + H_1i * H_3j,
+    #                H_2i * H_2j,
+    #                H_3i * H_2j + H_2i * H_3j,
+    #                H_3i * H_3j]^T
+    # Since B has 5/6 DOF, we need at least 3 different views.
+    for i, Hi in enumerate(H):
+        V[2 * i, :] = _v(Hi, 0, 1)
+        V[2 * i + 1, :] = _v(Hi, 0, 0) - _v(Hi, 1, 1)
 
     # Solve B
     if len(objPts) == 3:

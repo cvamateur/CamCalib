@@ -8,14 +8,14 @@ import argparse
 import numpy as np
 import cv2 as cv
 
-from calibration import calibrate, ROOT_DIR
+from camcalib import calibrate
 
 
 def get_parser():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-i", "--input", default=f"{ROOT_DIR}/data/imgs/leftcamera", help="Directory of chessboard images.")
-    parser.add_argument("-o", "--output", default=f"{ROOT_DIR}/output", help="Directory of results to save.")
+    parser.add_argument("-i", "--input", required=True, help="Directory of chessboard images.")
+    parser.add_argument("-o", "--output", default=f"./output", help="Directory of results to save.")
     parser.add_argument("-s", "--show-corners", action="store_true", help="Whether to display detected corners.")
     parser.add_argument("-ext", default="png", help="Image extension (default png).")
     parser.add_argument("--chessboard", default="11x7", help="Chessboard size counted by corners (default 11x7).")
@@ -80,17 +80,13 @@ def main(args):
     # and corresponding pixel coordinates of the
     # detected corners (imgpoints)
     K, D, rvecs, tvecs = calibrate(objpoints, imgpoints, (w, h))
-    retval, K1, D1, rvecs1, tvecs1 = cv.calibrateCamera(objpoints, imgpoints, (w, h), None, None)
 
     print("Intrinsic Matrix:\n", K)
-    print("Intrinsic Matrix1:\n", K1)
     print("Lens Distortion:\n", D)
-    print("Lens Distortion1:\n", D1)
-    print("Extrinsic Rotation:\n", rvecs[:5])
-    print("Extrinsic Rotation1:\n", rvecs1[:5])
-    print("Extrinsic Translation:\n", tvecs[:5])
-    print("Extrinsic Translation1:\n", tvecs1[:5])
+    print("Extrinsic Rotation:\n", rvecs)
+    print("Extrinsic Translation:\n", tvecs)
 
+    """
     # Use the derived camera parameters to undistort the image
     img_bgr = cv.imread(img_paths[0], cv.IMREAD_COLOR)
 
@@ -109,6 +105,7 @@ def main(args):
     cv.imshow("method 2", dst2)
     cv.waitKey(0)
     cv.destroyAllWindows()
+    """
 
 
 if __name__ == '__main__':

@@ -8,14 +8,13 @@ import argparse
 import numpy as np
 import cv2 as cv
 
-ROOT = os.path.dirname(os.path.dirname(__file__))
 
 
 def get_parser():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-i", "--input", default=f"{ROOT}/data/imgs/leftcamera", help="Directory of chessboard images.")
-    parser.add_argument("-o", "--output", default=f"{ROOT}/output", help="Directory of results to save.")
+    parser.add_argument("-i", "--input", required=True,  help="Directory of chessboard images.")
+    parser.add_argument("-o", "--output", default=f"./output", help="Directory of results to save.")
     parser.add_argument("-s", "--show-corners", action="store_true", help="Whether to display detected corners.")
     parser.add_argument("-ext", default="png", help="Image extension (default png).")
     parser.add_argument("--chessboard", default="11x7", help="Chessboard size counted by corners (default 11x7).")
