@@ -8,7 +8,7 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "calibrate.h"
+#include "../calibrate.h"
 
 
 int CHESSBOARD[2];  // e.g  11x7

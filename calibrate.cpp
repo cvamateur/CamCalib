@@ -1,16 +1,15 @@
 //
 // Created by chris on 2023/5/7.
 //
-#include "calibrate.h"
 #include <cassert>
-#include <cmath>
-#include <cfloat>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <Eigen/SVD>
 #include <Eigen/Cholesky>
 #include <opencv2/core/eigen.hpp>
-#include <iostream>
+
+#include "calibrate.h"
+
 
 static Eigen::VectorXd _v(const Eigen::Matrix3d &H, int i, int j) {
     Eigen::VectorXd v(6);
@@ -106,12 +105,12 @@ void calibrate(INPUT std::vector<std::vector<cv::Point3f>> &objPoints,
     Eigen::AngleAxisd rotA;
 
     for (int i = 0; i < H.size(); ++i) {
-        const auto& Hi = H[i];
+        const auto &Hi = H[i];
         h1 = Hi.col(0);
         h2 = Hi.col(1);
         h3 = Hi.col(2);
 
-        const double rho = 1.0 / (K_inv * h1).norm();
+        const double rho = 1.0 / ( K_inv * h1 ).norm();
         r1 = rho * K_inv * h1;
         r2 = rho * K_inv * h2;
         r3 = r1.cross(r2);
