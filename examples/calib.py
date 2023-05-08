@@ -65,7 +65,7 @@ def main(args):
             corners2 = cv.cornerSubPix(img_gray, corners, (11, 11), (-1, -1), CRITERIA)
 
             objpoints.append(objp)
-            imgpoints.append(corners2)
+            imgpoints.append(corners2.reshape(-1, 2))
 
             # display corners
             if args.show_corners:
