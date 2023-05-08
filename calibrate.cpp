@@ -100,7 +100,7 @@ void calibrate(INPUT std::vector<std::vector<cv::Point3f>> &objPoints,
 
     Eigen::Matrix3d K_inv = K.inverse();
     Eigen::Vector3d h1, h2, h3;
-    Eigen::Vector3d r1, r2, r3, t;
+    Eigen::Vector3d rvec, tvec;
     Eigen::Matrix3d R;
     Eigen::AngleAxisd rotA;
 
@@ -111,24 +111,18 @@ void calibrate(INPUT std::vector<std::vector<cv::Point3f>> &objPoints,
         h3 = Hi.col(2);
 
         const double rho = 1.0 / ( K_inv * h1 ).norm();
-        r1 = rho * K_inv * h1;
-        r2 = rho * K_inv * h2;
-        r3 = r1.cross(r2);
-        t = rho * K_inv * h3;
+        R.col(0) = rho * K_inv * h1;
+        R.col(1) = rho * K_inv * h2;
+        R.col(2) = R.col(0).cross(R.col(1));
+        rotA.fromRotationMatrix(R); // Rodrigues rotation vector
+        rvec = rotA.angle() * rotA.axis();
+        tvec = rho * K_inv * h3;
 
-        R.col(0) = r1;
-        R.col(1) = r2;
-        R.col(2) = r3;
-
-        // Rodrigues rotation vector
-        rotA.fromRotationMatrix(R);
-        r1 = rotA.angle() * rotA.axis();
-
-        rvecs.at<double>(i, 0) = r1[0];
-        rvecs.at<double>(i, 1) = r1[1];
-        rvecs.at<double>(i, 2) = r1[2];
-        tvecs.at<double>(i, 0) = t[0];
-        tvecs.at<double>(i, 1) = t[1];
-        tvecs.at<double>(i, 2) = t[2];
+        rvecs.at<double>(i, 0) = rvec[0];
+        rvecs.at<double>(i, 1) = rvec[1];
+        rvecs.at<double>(i, 2) = rvec[2];
+        tvecs.at<double>(i, 0) = tvec[0];
+        tvecs.at<double>(i, 1) = tvec[1];
+        tvecs.at<double>(i, 2) = tvec[2];
     }
 }
