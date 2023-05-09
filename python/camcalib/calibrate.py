@@ -1,9 +1,15 @@
-from typing import List
+from typing import List, NamedTuple
 
 from .homography import findHomography
 from .intrinsic import workIntrinsic
 from .extrinsic import workExtrinsics
 from .types import *
+
+
+class CalibrationResult(NamedTuple):
+    cameraMatrix: Matrix3d  # Camera intrinsic matrix.
+    rvecs: List[Vector3d]   # Rotation vectors of each image.
+    tvecs: List[Vector3d]   # Translation vector of each image.
 
 
 def calibrate(objPts: List[List[Vector3d]],
@@ -18,10 +24,7 @@ def calibrate(objPts: List[List[Vector3d]],
         imgSize: (Width, Height) of image.
 
     @Return
-        camMat: Camera intrinsic matrix.
-        dist: Lens distortion (Currently is None).
-        rvecs: Rotation vectors of each image.
-        tvecs: Translation vector of each image.
+        res: Calibration Result.
     """
     assert len(objPts) == len(imgPts) and len(objPts) >= 3
     n_imgs = len(objPts)
@@ -29,8 +32,8 @@ def calibrate(objPts: List[List[Vector3d]],
     #############
     # Intrinsic #
     #############
-    # for each image, solve homography H that maps Pi=(Xi,Yi,1) to
-    # p=(xi,yi,1). This can be solved by constructing linear equations
+    # for each image, solve homography H that maps Pi=(Xi,Yi,1)^T to
+    # p=(xi,yi,1)^T. This can be solved by constructing linear equations
     # for all pairs of points in the image, each pair generate two equations:
     #   (Pi^T, 0^T, -xi*Pi^T) * H = 0
     #   (0^T, Pi^T, -yi*Pi^T) * H = 0
@@ -44,7 +47,7 @@ def calibrate(objPts: List[List[Vector3d]],
     #         H = [h1, h2, h3] = K * [r1, r2, t], where
     #            hi: the i-th column of H, hi=[H_1i, H_2i, H_3i]^T
     #            r1: the first column of R
-    #            r2: the second column of H
+    #            r2: the second column of R
     #            t: translation vector
     #     Expand the formula above, and multiply K_inv of the left:
     #         K_inv * h1 = r1
@@ -87,4 +90,4 @@ def calibrate(objPts: List[List[Vector3d]],
     #   r = ρ * K_inv * h3
     rvecs, tvecs = workExtrinsics(H_lst, camMat)
 
-    return camMat, None, rvecs, tvecs
+    return CalibrationResult(camMat, rvecs, tvecs)

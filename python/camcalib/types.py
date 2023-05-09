@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+from numpy.typing import NDArray
 from typing import Generic, TypeVar, Tuple, Literal
 
 __all__ = [
@@ -13,7 +14,6 @@ Size = Tuple[int, int]
 
 if sys.version_info >= (3, 9):
     from typing import Annotated
-    from numpy.typing import NDArray
 
     Matrix = Annotated[NDArray[DType], Literal["int", "int"]]
 
@@ -29,7 +29,7 @@ if sys.version_info >= (3, 9):
 else:
     Shape = TypeVar("Shape")
 
-    class _NDArray(Generic[Shape, DType], np.ndarray):
+    class _NDArray(Generic[Shape, DType], NDArray):
         def __getitem__(self, item): ...
 
 
