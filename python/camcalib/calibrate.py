@@ -1,15 +1,15 @@
 from typing import List, NamedTuple
 
+import numpy as np
+
 from .homography import findHomography
 from .intrinsic import workIntrinsic
 from .extrinsic import workExtrinsics
+from .distortion import workDistortion
 from .types import *
 
 
-class CalibrationResult(NamedTuple):
-    cameraMatrix: Matrix3d  # Camera intrinsic matrix.
-    rvecs: List[Vector3d]   # Rotation vectors of each image.
-    tvecs: List[Vector3d]   # Translation vector of each image.
+
 
 
 def calibrate(objPts: List[List[Vector3d]],
@@ -90,4 +90,9 @@ def calibrate(objPts: List[List[Vector3d]],
     #   r = ρ * K_inv * h3
     rvecs, tvecs = workExtrinsics(H_lst, camMat)
 
-    return CalibrationResult(camMat, rvecs, tvecs)
+    ##############
+    # Distortions
+    ##############
+    distCoeffs: VectorXd = np.zeros([4], dtype=np.float64)  # k1, k2, p1, p2 [,k3]
+
+    return workDistortion(camMat, distCoeffs, rvecs, tvecs, objPts, imgPts)

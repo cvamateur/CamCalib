@@ -22,21 +22,15 @@ def workIntrinsic(H_lst: List[Matrix3d]) -> Matrix3d:
     n_imgs = len(H_lst)
 
     # Compose V
-    V: MatrixXd = np.zeros([2 * n_imgs, 6], dtype=np.float64)
+    V = np.zeros([2 * n_imgs, 6], dtype=np.float64)
     for i in range(n_imgs):
         V[2 * i, :] = _v(H_lst[i], 0, 1)
         V[2 * i + 1, :] = _v(H_lst[i], 0, 0) - _v(H_lst[i], 1, 1)
 
     # Solve B
-    B: Matrix3d
-    b: VectorXd
     if n_imgs == 3:
         raise NotImplementedError
     else:
-        U: MatrixXd
-        D: MatrixXd
-        Vt: MatrixXd
-
         U, D, Vt = np.linalg.svd(V)
         b = Vt[-1, :]
 
@@ -47,7 +41,6 @@ def workIntrinsic(H_lst: List[Matrix3d]) -> Matrix3d:
     ]).reshape(3, 3)
 
     # Decompose B to K
-    L: Matrix3d
     try:
         L = np.linalg.cholesky(B)
     except np.linalg.LinAlgError:

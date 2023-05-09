@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 from typing import Generic, TypeVar, Tuple, Literal
 
 __all__ = [
-    "DType", "Size", "Matrix",
+    "DType", "Size",
     "MatrixXd", "Matrix2d", "Matrix3d", "Matrix4d",
     "VectorXd", "Vector2d", "Vector3d", "Vector4d",
 ]
@@ -14,8 +14,6 @@ Size = Tuple[int, int]
 
 if sys.version_info >= (3, 9):
     from typing import Annotated
-
-    Matrix = Annotated[NDArray[DType], Literal["int", "int"]]
 
     MatrixXd = Annotated[NDArray[np.float64], Literal[-1, -1]]
     Matrix2d = Annotated[NDArray[np.float64], Literal[2, 2]]
@@ -33,7 +31,6 @@ else:
         def __getitem__(self, item): ...
 
 
-    Matrix = _NDArray["int,int", np.float64]
     MatrixXd = _NDArray["-1,-1", np.float64]
     Matrix2d = _NDArray["2,2", np.float64]
     Matrix3d = _NDArray["3,3", np.float64]

@@ -77,13 +77,12 @@ def _getNormalizationMatrix(pts: List[Vector2d], var: float = 2.0) -> Matrix3d:
     std_y = math.sqrt(std_y / len(pts))
 
     # Compose normalization matrix
-    sx = math.sqrt(var) / std_x
-    sy = math.sqrt(var) / std_y
-    normMat = np.array([
-        [sx, 0, -sx * miu_x],
-        [0, sy, -sy * miu_y],
-        [0, 0, 1]
-    ])
+    fx = math.sqrt(var) / std_x
+    fy = math.sqrt(var) / std_y
+    normMat = np.array(
+        [[fx, 0, -fx * miu_x],
+         [0, fy, -fy * miu_y],
+         [0, 0, 1]])
 
     return normMat
 
@@ -96,7 +95,7 @@ def _optimizeHomography(H: Matrix3d,
     Optimize H using Levenberg-Marquardt algorithm.
     """
     # H has 8 DOF
-    H_init = H.flatten()[:8]
+    H_init: VectorXd = H.flatten()[:8]
 
     res: opt.OptimizeResult = opt.least_squares(
         _reprojection_error,
@@ -106,7 +105,7 @@ def _optimizeHomography(H: Matrix3d,
         verbose=verbose,
         args=(objPts, imgPts),
     )
-    H_final = homogenous(res.x).reshape(3, 3)
+    H_final: Matrix3d = homogenous(res.x).reshape(3, 3)
 
     return H_final
 
