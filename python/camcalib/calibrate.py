@@ -9,7 +9,11 @@ from .distortion import workDistortion
 from .types import *
 
 
-
+class CalibrationResult(NamedTuple):
+    cameraMatrix: Matrix3d  # Camera intrinsic matrix.
+    distCoeffs: VectorXd  # Distortion parameters
+    rvecs: List[Vector3d]  # Rotation vectors of each image.
+    tvecs: List[Vector3d]  # Translation vector of each image.
 
 
 def calibrate(objPts: List[List[Vector3d]],
@@ -93,6 +97,7 @@ def calibrate(objPts: List[List[Vector3d]],
     ##############
     # Distortions
     ##############
-    distCoeffs: VectorXd = np.zeros([4], dtype=np.float64)  # k1, k2, p1, p2 [,k3]
+    distCoeffs: VectorXd = np.zeros([4], dtype=np.float64)  # k1, k2, p1, p2
+    workDistortion(camMat, distCoeffs, rvecs, tvecs, objPts, imgPts)
 
-    return workDistortion(camMat, distCoeffs, rvecs, tvecs, objPts, imgPts)
+    return CalibrationResult(camMat, distCoeffs, rvecs, tvecs)

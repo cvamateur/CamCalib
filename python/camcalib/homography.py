@@ -57,6 +57,29 @@ def findHomography(objPts: List[Vector3d], imgPts: List[Vector2d]) -> Matrix3d:
     return H
 
 
+def _optimizeHomography(H: Matrix3d,
+                        objPts: List[Vector3d],
+                        imgPts: List[Vector2d],
+                        verbose: bool = False) -> Matrix3d:
+    """
+    Optimize H using Levenberg-Marquardt algorithm.
+    """
+    # H has 8 DOF
+    H_init: VectorXd = H.flatten()[:8]
+
+    res: opt.OptimizeResult = opt.least_squares(
+        _reprojection_error,
+        H_init,
+        _jacobian,
+        method="lm",
+        verbose=verbose,
+        args=(objPts, imgPts),
+    )
+    H_final: Matrix3d = homogenous(res.x).reshape(3, 3)
+
+    return H_final
+
+
 def _getNormalizationMatrix(pts: List[Vector2d], var: float = 2.0) -> Matrix3d:
     # calculate mean
     miu_x = 0.0
@@ -85,29 +108,6 @@ def _getNormalizationMatrix(pts: List[Vector2d], var: float = 2.0) -> Matrix3d:
          [0, 0, 1]])
 
     return normMat
-
-
-def _optimizeHomography(H: Matrix3d,
-                        objPts: List[Vector3d],
-                        imgPts: List[Vector2d],
-                        verbose: bool = False) -> Matrix3d:
-    """
-    Optimize H using Levenberg-Marquardt algorithm.
-    """
-    # H has 8 DOF
-    H_init: VectorXd = H.flatten()[:8]
-
-    res: opt.OptimizeResult = opt.least_squares(
-        _reprojection_error,
-        H_init,
-        _jacobian,
-        method="lm",
-        verbose=verbose,
-        args=(objPts, imgPts),
-    )
-    H_final: Matrix3d = homogenous(res.x).reshape(3, 3)
-
-    return H_final
 
 
 def _reprojection_error(H_vec: VectorXd,

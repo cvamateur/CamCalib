@@ -9,27 +9,24 @@ from .types import *
 __all__ = ["workDistortion"]
 
 
-class CalibrationResult(NamedTuple):
-    cameraMatrix: Matrix3d  # Camera intrinsic matrix.
-    distCoeffs: VectorXd  # Distortion parameters
-    rvecs: List[Vector3d]  # Rotation vectors of each image.
-    tvecs: List[Vector3d]  # Translation vector of each image.
-
-
 def workDistortion(camMat: Matrix3d,
                    distCoeffs: VectorXd,
                    rvecs: List[Vector3d],
                    tvecs: List[Vector3d],
                    objPts: List[List[Vector3d]],
-                   imgPts: List[List[Vector2d]]):
-    params = _extractParameters(camMat, distCoeffs, rvecs, tvecs)
+                   imgPts: List[List[Vector2d]],
+                   verbose: bool = False):
+    params_init = _extractParameters(camMat, distCoeffs, rvecs, tvecs)
 
-    res = opt.least_squares(
+    res: opt.OptimizeResult = opt.least_squares(
         _reprojection_error,
-
+        params_init,
+        method="lm",
+        verbose=verbose,
+        args=(objPts, imgPts)
     )
 
-    return CalibrationResult(camMat, distCoeffs, rvecs, tvecs)
+    _composeParameters(res.x, camMat, distCoeffs, rvecs, tvecs)
 
 
 def _extractParameters(K: Matrix3d,
@@ -41,7 +38,7 @@ def _extractParameters(K: Matrix3d,
     # K params: fx, fy, cx, cy
     params.extend([K[0, 0], K[1, 1], K[0, 2], K[1, 2]])
 
-    # D params: k1, k2, p1, p2 [,k3]
+    # D params: k1, k2, p1, p2
     params.extend(D)
 
     # R, T params: r1, r2, r3, tx, ty, tz
@@ -63,19 +60,17 @@ def _composeParameters(params: VectorXd,
     np.copyto(K, K_.reshape(3, 3))
 
     # compose D
-    np.copyto(D, params[4:4 + len(D)])
+    np.copyto(D, params[4:8])
 
     # compose R, T
-    _off = 4 + len(D)
     for i in range(len(rvecs)):
-        start = _off + 6 * i
+        start = 8 + 6 * i
         end = start + 3
         np.copyto(params[start: end], rvecs[i])
         np.copyto(params[start + 3: end + 3], tvecs[i])
 
 
 def _reprojection_error(params: VectorXd,
-                        D_dim: int,
                         objPts: List[List[Vector3d]],
                         imgPts: List[List[Vector2d]]):
     # final residuals
@@ -85,16 +80,13 @@ def _reprojection_error(params: VectorXd,
 
     # Get Intrinsic Matrix
     fx, fy, cx, cy = params[0:4]
-    K = np.array([fx, 0, cx, 0, fy, cy, 0, 0, 1], dtype=np.float64)
-    K = K.reshape(3, 3)
 
     # Get Distortion params
-    D = params[4:4 + D_dim]
+    k1, k2, p1, p2 = params[4:8]
 
     # for all points in the image, add residuals
-    _off = 4 + D_dim
     for i in range(n_imgs):
-        start = _off + 6 * i
+        start = 8 + 6 * i
         end = start + 3
 
         # rotation and translation params
@@ -102,13 +94,30 @@ def _reprojection_error(params: VectorXd,
         tvec = params[start + 3: end + 3].reshape(3, 1)
         R = cv.Rodrigues(rvec)[0]
 
-        # Extrinsic of this image
-        Ex = np.concatenate([R, tvec], axis=1)
-
         # calculate residual of each point pair
         for j in range(n_pts):
-            Pw = homogenous(objPts[i][j])
 
             # normalized camera point
-            norm_Px = Ex @ Pw
-            norm_Px /= norm_Px[2]
+            norm_pt = (R @ objPts[i][j] + tvec).reshape(-1)
+            norm_pt /= norm_pt[2]
+
+            u = norm_pt[0]
+            v = norm_pt[1]
+
+            # distortion
+            r = np.linalg.norm(norm_pt)
+            L = 1. + k1 * pow(r, 2) + k2 * pow(r, 4)
+            du = 2. * p1 * u * v + p2 * (r * r + 2. * u * u)
+            dv = p1 * (r * r + 2. * v * v) + 2. * p2 * u * v
+            u = L * u + du
+            v = L * v + dv
+
+            # projection
+            pred_xij = fx * u + cx
+            pred_yij = fy * v + cy
+
+            # J
+            residuals[n_pts * i + 2 * j] = imgPts[i][j][0] - pred_xij
+            residuals[n_pts * i + 2 * j + 1] = imgPts[i][j][1] - pred_yij
+
+    return residuals
