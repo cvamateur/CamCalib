@@ -86,7 +86,6 @@ def main(args):
     print("Extrinsic Rotation:\n", rvecs)
     print("Extrinsic Translation:\n", tvecs)
 
-    """
     # Use the derived camera parameters to undistort the image
     img_bgr = cv.imread(img_paths[0], cv.IMREAD_COLOR)
 
@@ -105,7 +104,6 @@ def main(args):
     cv.imshow("method 2", dst2)
     cv.waitKey(0)
     cv.destroyAllWindows()
-    """
 
 
 if __name__ == '__main__':

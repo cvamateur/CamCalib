@@ -89,7 +89,7 @@ class _Distortion:
     def y(self, y, x, r):
         L = 1. + sum(k * pow(r, 2 * p) for p, k in enumerate([self.k1, self.k2, self.k3], start=1))
         qy = self.p1 * (r * r + 2. * y * y) + 2. * self.p2 * x * y
-        return L * y * qy
+        return L * y + qy
 
 
 def _reprojection_error(params: VectorXd,
