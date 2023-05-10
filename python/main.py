@@ -83,10 +83,10 @@ def main(args):
 
     retVal, K_, D_, rvecs_, tvecs_ = cv.calibrateCamera(objpoints, imgpoints, (w, h), None, None)
 
-    print("Intrinsic Matrix:\n", K)
-    print("Intrinsic Matrix:\n", K_)
-    print("Lens Distortion:\n", D)
-    print("Lens Distortion:\n", D_)
+    print("Intrinsic Matrix Code:\n", K)
+    print("Intrinsic Matrix OpenCV:\n", K_)
+    print("Lens Distortion Code:\n", D)
+    print("Lens Distortion OpenCV:\n", D_)
     print("Extrinsic Rotation:\n", rvecs)
     print("Extrinsic Translation:\n", tvecs)
 
