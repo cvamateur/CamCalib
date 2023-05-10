@@ -132,7 +132,7 @@ def _reprojection_error(params: VectorXd,
             # distortion
             r = math.sqrt(u * u + v * v)
             up = distort.x(u, v, r)
-            vp = distort.y(u, v, r)
+            vp = distort.y(v, u, r)
 
             # projection
             pred_xij = fx * up + cx
@@ -180,7 +180,7 @@ def _jacobian(params: VectorXd,
 
             r = math.sqrt(u * u + v * v)
             up = distort.x(u, v, r)
-            vp = distort.y(u, v, r)
+            vp = distort.y(v, u, r)
 
             # ∂Jx
             dJx = jac[2 * n_pts * i + 2 * j]
