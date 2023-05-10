@@ -97,7 +97,7 @@ def calibrate(objPts: List[List[Vector3d]],
     ##############
     # Distortions
     ##############
-    distCoeffs: VectorXd = np.zeros([4], dtype=np.float64)  # k1, k2, p1, p2
+    distCoeffs: VectorXd = np.zeros([5], dtype=np.float64)  # k1, k2, p1, p2, k3
     workDistortion(camMat, distCoeffs, rvecs, tvecs, objPts, imgPts)
 
     return CalibrationResult(camMat, distCoeffs, rvecs, tvecs)
