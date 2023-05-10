@@ -53,21 +53,21 @@ def calibrate(objPts: List[List[Vector3d]],
     #        r1: the first column of R
     #        r2: the second column of R
     #        t: translation vector
-    # Expand the formula above, and multiply K_inv of the left:
+    # Expand the formula above, and multiply K_inv from the left:
     #     K_inv * h1 = r1
     #     K_inv * h2 = r2
     #     K_inv * h3 = t
-    # Since r1, r2 stem from a rotation matrix, we exploit properties:
+    # Since r1, r2 stem from a rotation matrix, we exploit the properties:
     #     r1^T * r2 = 0
     #     |r1| = |r2| = 1 -> r1^T * r1 - r2^T * r2 = 0
     # Substitute in to the properties we get:
     #     h1^T * K_inv^T * K_inv * h2 = 0
     #     h1^T * K_inv^T * K_inv * h1 - h2^T * K_inv^T * K_inv * h2 = 0
     # To simplify the equations, we define a symmetric and positive
-    # definite matrix B = K_inv^T * K_inv, such that:
+    # definite matrix B = K_inv^T * K_inv, we can rewrite the above formulas:
     #     h1^T * B * h2 = 0
     #     h1^T * B * h1 - h2^T * B * h2 = 0
-    # If B is solved, then K is obtained by Cholesky decomposition:
+    # If B is solved, then K can be obtained by Cholesky decomposition:
     #     Chol(B) = L * L^T, where L = K_inv^T
     # Write the equations relative to B into a linear system as:
     #    V_12^T * b = 0

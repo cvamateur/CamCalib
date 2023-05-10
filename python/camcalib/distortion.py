@@ -91,6 +91,20 @@ class _Distortion:
         qy = self.p1 * (r * r + 2. * y * y) + 2. * self.p2 * x * y
         return L * y + qy
 
+    def grad_x(self, x, y, r):
+        L = 1. + sum(k * pow(r, 2 * p) for p, k in enumerate([self.k1, self.k2, self.k3], start=1))
+        dLdx = x * (2. * self.k1 + 4. * self.k2 * r ** 2 + 6 * self.k3 * r ** 4)
+        dqdx = 2. * self.p1 * y + 6 * self.p2 * x
+        dx = x * dLdx + L + dqdx
+        return dx
+
+    def grad_y(self, y, x, r):
+        L = 1. + sum(k * pow(r, 2 * p) for p, k in enumerate([self.k1, self.k2, self.k3], start=1))
+        dLdy = y * (2. * self.k1 + 4. * self.k2 * r ** 2 + 6 * self.k3 * r ** 4)
+        dqdy = 6. * self.p1 * y + 2. * self.p2 * x
+        dy = y * dLdy + L + dqdy
+        return dy
+
 
 def _reprojection_error(params: VectorXd,
                         objPts: List[List[Vector3d]],
@@ -199,7 +213,8 @@ def _jacobian(params: VectorXd,
             dJx[8] = -fx * u * pow(r, 6)  # dk3
 
             # gradient on rvec and tvec
-            dupdu = opt.approx_fprime(u, distort.x, None, v, r)[0]
+            # dupdu = opt.approx_fprime(u, distort.x, None, v, r)[0]
+            dupdu = distort.grad_x(u, v, r)
             dJxdu = -fx * dupdu
             dJxdXc = dJxdu / Zc
             dJxdZc = dJxdu * (-Xc / Zc ** 2)
@@ -227,7 +242,8 @@ def _jacobian(params: VectorXd,
             dJy[7] = -fy * 2. * u * v
             dJy[8] = -fy * v * pow(r, 6)
 
-            dvpdv = opt.approx_fprime(v, distort.y, None, u, r)[0]
+            # dvpdv = opt.approx_fprime(v, distort.y, None, u, r)[0]
+            dvpdv = distort.grad_y(v, u, r)
             dJydv = -fy * dvpdv
             dJydYc = dJydv / Zc
             dJydZc = dJydv * (-Yc / Zc ** 2)

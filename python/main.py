@@ -81,12 +81,15 @@ def main(args):
     # detected corners (imgpoints)
     K, D, rvecs, tvecs = calibrate(objpoints, imgpoints, (w, h))
 
+    retVal, K_, D_, rvecs_, tvecs_ = cv.calibrateCamera(objpoints, imgpoints, (w, h), None, None)
+
     print("Intrinsic Matrix:\n", K)
+    print("Intrinsic Matrix:\n", K_)
     print("Lens Distortion:\n", D)
+    print("Lens Distortion:\n", D_)
     print("Extrinsic Rotation:\n", rvecs)
     print("Extrinsic Translation:\n", tvecs)
 
-    """
     # Use the derived camera parameters to undistort the image
     img_bgr = cv.imread(img_paths[0], cv.IMREAD_COLOR)
 
@@ -105,7 +108,6 @@ def main(args):
     cv.imshow("method 2", dst2)
     cv.waitKey(0)
     cv.destroyAllWindows()
-    """
 
 
 if __name__ == '__main__':
