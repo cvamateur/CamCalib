@@ -24,14 +24,14 @@ def findHomography(objPts: List[Vector3d], imgPts: List[Vector2d]) -> Matrix3d:
         objPt = objNormMat @ objPt
         imgPt = imgNormMat @ imgPt
 
-        A[2 * i, 0:3, None] = objPt
-        A[2 * i, 3:6, None] = np.zeros([3, 1])
-        A[2 * i, 6:8, None] = -imgPt[0] * objPt[0:2]
+        A[2 * i, 0:3] = objPt.flatten()
+        A[2 * i, 3:6] = np.zeros([3], dtype=np.float64)
+        A[2 * i, 6:8] = -imgPt[0] * objPt[0:2].flatten()
         b[2 * i, 0] = imgPt[0]
 
-        A[2 * i + 1, 0:3, None] = np.zeros([3, 1])
-        A[2 * i + 1, 3:6, None] = objPt
-        A[2 * i + 1, 6:8, None] = -imgPt[1] * objPt[0:2]
+        A[2 * i + 1, 0:3] = np.zeros([3], dtype=np.float64)
+        A[2 * i + 1, 3:6] = objPt.flatten()
+        A[2 * i + 1, 6:8] = -imgPt[1] * objPt[0:2].flatten()
         b[2 * i + 1, 0] = imgPt[1]
 
     H: Matrix3d
@@ -55,29 +55,6 @@ def findHomography(objPts: List[Vector3d], imgPts: List[Vector2d]) -> Matrix3d:
     H = _optimizeHomography(H, objPts, imgPts)
 
     return H
-
-
-def _optimizeHomography(H: Matrix3d,
-                        objPts: List[Vector3d],
-                        imgPts: List[Vector2d],
-                        verbose: bool = False) -> Matrix3d:
-    """
-    Optimize H using Levenberg-Marquardt algorithm.
-    """
-    # H has 8 DOF
-    H_init: VectorXd = H.flatten()[:8]
-
-    res: opt.OptimizeResult = opt.least_squares(
-        _reprojection_error,
-        H_init,
-        _jacobian,
-        method="lm",
-        verbose=verbose,
-        args=(objPts, imgPts),
-    )
-    H_final: Matrix3d = homogenous(res.x).reshape(3, 3)
-
-    return H_final
 
 
 def _getNormalizationMatrix(pts: List[Vector2d], var: float = 2.0) -> Matrix3d:
@@ -108,6 +85,29 @@ def _getNormalizationMatrix(pts: List[Vector2d], var: float = 2.0) -> Matrix3d:
          [0, 0, 1]])
 
     return normMat
+
+
+def _optimizeHomography(H: Matrix3d,
+                        objPts: List[Vector3d],
+                        imgPts: List[Vector2d],
+                        verbose: bool = False) -> Matrix3d:
+    """
+    Optimize H using Levenberg-Marquardt algorithm.
+    """
+    # H has 8 DOF
+    H_init: VectorXd = H.flatten()[:8]
+
+    res: opt.OptimizeResult = opt.least_squares(
+        _reprojection_error,
+        H_init,
+        _jacobian,
+        method="lm",
+        verbose=verbose,
+        args=(objPts, imgPts),
+    )
+    H_final: Matrix3d = homogenous(res.x).reshape(3, 3)
+
+    return H_final
 
 
 def _reprojection_error(H_vec: VectorXd,
@@ -150,13 +150,13 @@ def _jacobian(H_vec: VectorXd,
         w: float = predPt[2]
 
         # ∂Jx/∂h
-        jac[2 * i, 0:3, None] = -objPt / w
-        jac[2 * i, 3:6, None] = 0.0
-        jac[2 * i, 6:8, None] = u / (w * w) * objPt[:2]
+        jac[2 * i, 0:3] = -objPt.flatten() / w
+        jac[2 * i, 3:6] = 0.0
+        jac[2 * i, 6:8] = u / (w * w) * objPt[:2].flatten()
 
         # ∂Jy/∂h
-        jac[2 * i + 1, 0:3, None] = 0.0
-        jac[2 * i + 1, 3:6, None] = -objPt / w
-        jac[2 * i + 1, 6:8, None] = v / (w * w) * objPt[:2]
+        jac[2 * i + 1, 0:3] = 0.0
+        jac[2 * i + 1, 3:6] = -objPt.flatten() / w
+        jac[2 * i + 1, 6:8] = v / (w * w) * objPt[:2].flatten()
 
     return jac
