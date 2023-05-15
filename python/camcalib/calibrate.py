@@ -6,6 +6,7 @@ from .homography import findHomography
 from .intrinsic import workIntrinsic
 from .extrinsic import workExtrinsics
 from .distortion import workDistortion
+from .refine_all import refine_all
 from .types import *
 
 
@@ -97,7 +98,21 @@ def calibrate(objPts: List[List[Vector3d]],
     ##############
     # Distortions
     ##############
-    distCoeffs: VectorXd = np.zeros([5], dtype=np.float64)  # k1, k2, p1, p2, k3
-    workDistortion(camMat, distCoeffs, rvecs, tvecs, objPts, imgPts)
+    # Initialize distortions by solving linear system: Ax=b
+    # up - u = ur^2 * k1 + ur^4 * k2 + ur^6 * k3 + 2uv * p1 + (r^2 + 2u^2) * p2
+    # vp - v = vr^2 * k1 + vr^4 * k2 + vr^6 * k3 + (r^2 + 2v^2) * p1 + 2uv * p2
+    # where,
+    #       up, vp, u, v, r are known
+    #       k1, k2, k3, p1, p3 are unknowns
+    # up and vp can be calculated by:
+    #       up = (xi - cx) / fx
+    #       vp = (yi - cy) / fy
+    distCoeffs: VectorXd = workDistortion(camMat, rvecs, tvecs, objPts, imgPts)
+    # distCoeffs: VectorXd = np.zeros([5], dtype=np.float64)
+
+    #########
+    # Refine
+    #########
+    refine_all(camMat, distCoeffs, rvecs, tvecs, objPts, imgPts)
 
     return CalibrationResult(camMat, distCoeffs, rvecs, tvecs)
