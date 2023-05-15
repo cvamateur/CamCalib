@@ -3,8 +3,8 @@
 Implementation of Zhang's method using C++ and Python.
 - **Intrinsic Matrix** (complete)
 - **Extrinsic Matrices** (complete)
-- Radial distortion (in progress)
-- Tangential distortion (in progress)
+- Radial distortion (complete)
+- Tangential distortion (complete)
 
 ## Prerequisite
 - OpenCV 4.5.5
