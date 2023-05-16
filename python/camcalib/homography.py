@@ -34,21 +34,18 @@ def findHomography(objPts: List[Vector3d], imgPts: List[Vector2d]) -> Matrix3d:
         A[2 * i + 1, 6:8] = -imgPt[1] * objPt[0:2].flatten()
         b[2 * i + 1, 0] = imgPt[1]
 
-    H: Matrix3d
-    U: MatrixXd
-    D: MatrixXd
-    Vt: MatrixXd
+    H_vec: VectorXd
     if n_pts == 4:
         H_vec = np.linalg.inv(A) @ b
     else:
-        U, D, Vt = np.linalg.svd(A)
-        D_inv = np.zeros([8, 2 * n_pts], dtype=np.float64)
+        U, D, Vt = np.linalg.svd(A, full_matrices=False)
+        D_inv = np.zeros([8, 8], dtype=np.float64)
         for k in range(8):
             D_inv[k, k] = 0.0 if D[k] < 1e-6 else 1. / D[k]
         H_vec = Vt.T @ D_inv @ U.T @ b
 
     # the last element is always 1
-    H = homogenous(H_vec).reshape(3, 3)
+    H: Matrix3d = homogenous(H_vec).reshape(3, 3)
     H = np.linalg.inv(imgNormMat) @ H @ objNormMat
     H /= H[2, 2]
 

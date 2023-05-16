@@ -49,7 +49,7 @@ def workDistortion(camMat: Matrix3d,
             b[2 * i + j + 1] = vp - v
 
     u, s, vt = np.linalg.svd(A, full_matrices=False)
-    s_inv = np.zeros([5, u.shape[1]], dtype=np.float64)
+    s_inv = np.zeros([5, 5], dtype=np.float64)
     for i in range(5):
         s_inv[i, i] = 0. if s[i] < 1e-6 else 1. / s[i]
 
