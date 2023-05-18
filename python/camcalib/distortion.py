@@ -42,11 +42,11 @@ def workDistortion(camMat: Matrix3d,
             up = (imgPts[i][j][0] - cx) / fx
             vp = (imgPts[i][j][1] - cy) / fy
 
-            A[2 * i + j] = np.array([u * pow(r, 2), u * pow(r, 4), u * pow(r, 6), 2 * u * v, r * r + 2 * u * u])
-            b[2 * i + j] = up - u
+            A[2 * n_pts * i + 2 * j] = np.array([u * pow(r, 2), u * pow(r, 4), u * pow(r, 6), 2 * u * v, r * r + 2 * u * u])
+            b[2 * n_pts * i + 2 * j + 1] = up - u
 
-            A[2 * i + j + 1] = np.array([v * pow(r, 2), v * pow(r, 4), v * pow(r, 6), r * r + 2 * v * v, 2 * u * v])
-            b[2 * i + j + 1] = vp - v
+            A[2 * n_pts * i + 2 * j] = np.array([v * pow(r, 2), v * pow(r, 4), v * pow(r, 6), r * r + 2 * v * v, 2 * u * v])
+            b[2 * n_pts * i + 2 * j + 1] = vp - v
 
     u, s, vt = np.linalg.svd(A, full_matrices=False)
     s_inv = np.zeros([5, 5], dtype=np.float64)
