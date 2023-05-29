@@ -7,14 +7,8 @@ from .intrinsic import workIntrinsic
 from .extrinsic import workExtrinsics
 from .distortion import workDistortion
 from .refine_all import refine_all
+from .results import CalibrationResult
 from .types import *
-
-
-class CalibrationResult(NamedTuple):
-    cameraMatrix: Matrix3d  # Camera intrinsic matrix.
-    distCoeffs: VectorXd  # Distortion parameters
-    rvecs: List[Vector3d]  # Rotation vectors of each image.
-    tvecs: List[Vector3d]  # Translation vector of each image.
 
 
 def calibrate(objPts: List[List[Vector3d]],
