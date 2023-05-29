@@ -9,6 +9,7 @@ import numpy as np
 import cv2 as cv
 
 from camcalib import calibrate
+from camcalib.results import save, to_dict
 
 
 def get_parser():
@@ -27,6 +28,11 @@ def main(args):
     """
     Refer to https://learnopencv.com/camera-calibration-using-opencv/ for more details.
     """
+    if not os.path.exists(args.output):
+        sys.stderr.write(f"[ERROR]: path not exist: {args.output}")
+        sys.exit(-1)
+    args.output = os.path.abspath(os.path.expanduser(args.output))
+
     CRITERIA = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
     FLAG = cv.CALIB_CB_ADAPTIVE_THRESH + cv.CALIB_CB_NORMALIZE_IMAGE + cv.CALIB_CB_FAST_CHECK
 
@@ -79,7 +85,12 @@ def main(args):
     # passing the value of known 3D points (objpoints)
     # and corresponding pixel coordinates of the
     # detected corners (imgpoints)
-    K, D, rvecs, tvecs = calibrate(objpoints, imgpoints, (w, h))
+    res = calibrate(objpoints, imgpoints, (w, h))
+    K, D, rvecs, tvecs = res
+    out_fn = os.path.join(args.output, "calib.pkl")
+    with open(out_fn, "wb") as f:
+        save(to_dict(res), f)
+    print(f"info: save calibration to: {out_fn}")
 
     print("Intrinsic Matrix:\n", K)
     print("Lens Distortion:\n", D)
@@ -104,6 +115,8 @@ def main(args):
     cv.imshow("method 2", dst2)
     cv.waitKey(0)
     cv.destroyAllWindows()
+
+
 
 
 if __name__ == '__main__':
