@@ -55,12 +55,21 @@ def main(args):
     if not img_paths:
         sys.stderr.write(f"error: no image found: {path_pattern}\n")
         sys.exit(-1)
+    print(f"info: found {len(img_paths)} images")
 
+    # cv.namedWindow("Corner", cv.WINDOW_FULLSCREEN)
+    # cv.resizeWindow("Corner", 1024, 768)
     h, w = (0, 0)
     for path in img_paths:
         img_bgr = cv.imread(path, cv.IMREAD_COLOR)
+        print(path)
         img_gray = cv.cvtColor(img_bgr, cv.COLOR_BGR2GRAY)
         h, w = img_bgr.shape[:2]
+
+        img_bgr_copy = img_bgr.copy()
+        img_bgr_copy = cv.resize(img_bgr_copy, (1024, 768))
+        cv.imshow("Image", img_bgr_copy)
+        cv.waitKey(10)
 
         # find checkerboard corners
         # if desired number of corners are found in the image then ret=true
@@ -76,8 +85,9 @@ def main(args):
             # display corners
             if args.show_corners:
                 img_bgr = cv.drawChessboardCorners(img_bgr, CHESSBOARD, corners2, ret)
-                cv.imshow("img", img_bgr)
-                cv.waitKey(0)
+                img_bgr = cv.resize(img_bgr, (1024, 768), interpolation=cv.INTER_LINEAR)
+                cv.imshow("Corner", img_bgr)
+                cv.waitKey(20)
         else:
             sys.stderr.write(f"skip: no chessboard pattern detected: {path}\n")
 
@@ -85,6 +95,7 @@ def main(args):
     # passing the value of known 3D points (objpoints)
     # and corresponding pixel coordinates of the
     # detected corners (imgpoints)
+    print("start calibrating")
     res = calibrate(objpoints, imgpoints, (w, h))
     K, D, rvecs, tvecs = res
     out_fn = os.path.join(args.output, "calib.pkl")
